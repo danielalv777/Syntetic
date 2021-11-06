@@ -1,0 +1,7 @@
+{
+  "schemaType": "LAUNCHER",
+  "id": "logconnector-launcher",
+  "displayName": "LogconnectorLauncher",
+  "description": "Describe me",
+  "rootNerdletId": "logconnector"
+}
