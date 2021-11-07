@@ -1,6 +1,7 @@
 import React from 'react';
-import LogConnector from './services/LogConnector';
+import SynConnector from './services/SynConnector';
 import CredentialConnector from './services/CredentialConnector';
+import NerdStorageVault from './services/NerdStorageVault';
 import nr1 from '../../nr1.json';
 import { AccountStorageQuery } from 'nr1';
 
@@ -8,18 +9,18 @@ const toInputUppercase = e => {
   e.target.value = ("" + e.target.value).toUpperCase();
 };
 
-export default class LogconnectorNerdlet extends React.Component {
+export default class SynConnectorNerdlet extends React.Component {
   constructor(props) {
     super(props);
     this.synteticMonitorSelected=null;
     this.state= {
       accountId: 2710112,
-      visible: false,
+      arrayCredentialNSVault: [],
       arrayStorageSyn: [],
       selected: false,
       monitorSelected: null,
-      keyVault: '',
-      valueVault: ''
+      keyVault: null,
+      valueVault: null
     }
     this.getsyntetic = this.getSyntetic();
     
@@ -30,8 +31,9 @@ export default class LogconnectorNerdlet extends React.Component {
   }
 
   BoootstrapApplication = async () => {
-    this.LogConnector = new LogConnector();
+    this.SynConnector = new SynConnector();
     this.CredentialConnector = new CredentialConnector();
+    this.NerdStorageVault = new NerdStorageVault();
   };
 
   async getSyntetic(){
@@ -65,7 +67,7 @@ export default class LogconnectorNerdlet extends React.Component {
       slaThreshold: 1.0
     };
     console.log('click en crear');
-    await this.LogConnector.Create(syntetic);
+    await this.SynConnector.Create(syntetic);
     this.getSyntetic();
   }
 
@@ -78,12 +80,12 @@ export default class LogconnectorNerdlet extends React.Component {
     }
     console.log('llego update')
     const monitorId = this.synteticMonitorSelected.monitorId;
-    await this.LogConnector.updateScript(monitorId, scriptUdpdate);
+    await this.SynConnector.updateScript(monitorId, scriptUdpdate);
   }
 
   async Delete(){
     const monitorId = this.synteticMonitorSelected.monitorId;
-    await this.LogConnector.Delete(monitorId);
+    await this.SynConnector.Delete(monitorId);
     this.getSyntetic();
   }
 
@@ -101,7 +103,7 @@ export default class LogconnectorNerdlet extends React.Component {
   }
 
   async GetMonitor(monitorId){
-    const monitor = await this.LogConnector.getMonitor(monitorId);
+    const monitor = await this.SynConnector.getMonitor(monitorId);
     this.setState({monitorSelected: monitor});
     console.log('monitorSelected',this.state.monitorSelected)
   }
@@ -117,7 +119,7 @@ export default class LogconnectorNerdlet extends React.Component {
         status: "DISABLED",
         slaThreshold: monitorSelected.slaThreshold
       }
-      await this.LogConnector.updateMonitor(monitorSelected.id, monitor);
+      await this.SynConnector.updateMonitor(monitorSelected.id, monitor);
       this.setState({selected: false, monitorSelected: null});
       this.getSyntetic();
     }
@@ -131,7 +133,7 @@ export default class LogconnectorNerdlet extends React.Component {
         status: "ENABLED",
         slaThreshold: monitorSelected.slaThreshold
       }
-      await this.LogConnector.updateMonitor(monitorSelected.id, monitor);
+      await this.SynConnector.updateMonitor(monitorSelected.id, monitor);
       this.setState({selected: false, monitorSelected: null});
       this.getSyntetic();
     }
@@ -163,29 +165,40 @@ export default class LogconnectorNerdlet extends React.Component {
     };
     this.CredentialConnector.deleteCredential(credential);
   }
-  // ==================================================================================================================
+  // ==================================== Nerd Storage Vault ==========================================================
   
   updateInputKey(evt) {
-    // this.setState({
-    //   inputValue: evt.target.value
-    // });
-    console.log('datos ingresados', evt.target.value);
+    console.log('datos ingresados', typeof(evt.target.value));
     this.setState({keyVault: evt.target.value});
   }
 
   updateInputValue(evt) {
-    // this.setState({
-    //   inputValue: evt.target.value
-    // });
-    console.log('datos ingresados value', evt.target.value);
+    console.log('datos ingresados value', typeof(evt.target.value));
     this.setState({valueVault: evt.target.value});
   }
 
+  async CreateStorageVault() {
+    const token = 'token'
+    const key = this.state.keyVault;
+    const value = this.state.valueVault;
+    if (key !== null && value !== null && key !== '' && value !== ''){
+      await this.NerdStorageVault.storeToken(key, value);
+    }
+    else{
+      console.log('entro else')
+    }
+  }
+
+  async GetStorageVault() {
+    const credentialsNerdStorage = await this.NerdStorageVault.CallGetToken();
+    this.setState({arrayCredentialNSVault: credentialsNerdStorage});
+  }
+
   render() {
-    const {arrayStorageSyn, selected,  monitorSelected} = this.state;
+    const {arrayStorageSyn, selected,  monitorSelected, arrayCredentialNSVault} = this.state;
     return (
       <div>
-        <h1>Hello, logconnector Nerdlet!</h1>
+        <h1>Hello, SynConnector Nerdlet!</h1>
         <div 
           style={{
             display: 'flex',
@@ -421,9 +434,57 @@ export default class LogconnectorNerdlet extends React.Component {
                 alignItems: 'center',
                 border: '3px solid rgba(0, 0, 0, 0.05)'
               }}
+              onClick={() => {
+                this.CreateStorageVault();
+              }}
             >
               Crear
             </div>
+            <div
+              style={{
+                display: 'flex',
+                cursor: 'pointer',
+                marginLeft: '20px',
+                height: '30px',
+                width: '100px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                border: '3px solid rgba(0, 0, 0, 0.05)'
+              }}
+              onClick={() => {
+                this.GetStorageVault();
+              }}
+            >
+              Listar Vault
+            </div>
+            <div>
+            <p style= {{marginLeft: '20px'}}>Lista credenciales del NerdStorageVault</p>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                marginLeft: '20px',
+                height: '100px',
+                width: '250px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                border: '3px solid rgba(0, 0, 0, 0.05)'
+              }}
+            >
+              {arrayCredentialNSVault.map((credential) => {
+                  return (
+                    <label
+                      key={credential.key}
+                      onClick={() => this.setMonitor(syntetic)}
+                    >
+                      {credential.key + ' - ' + credential.value}
+                    </label>
+                  )
+                  
+                })
+              }
+            </div>
+          </div>
         </div>
       </div>
     );

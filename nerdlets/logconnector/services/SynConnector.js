@@ -10,7 +10,7 @@ import {
 //import Script from '../../../script_example.js';
 
 // clase que trabaja de manera independiente
-export default class LogConnector {
+export default class SynConnector {
   constructor() {
     this.pathpoint_id = nr1.id;
     this.buffer = [];
