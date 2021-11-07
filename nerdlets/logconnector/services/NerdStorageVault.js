@@ -74,7 +74,6 @@ export default class NerdStorageVault {
         
         await NerdGraphMutation.mutate({ mutation: mutation, variables: variables }).then(
             (data) => {
-                console.log('data store token',data);
                 if (data.data.nerdStorageVaultWriteSecret.status === "SUCCESS") {
                     //this.setState({token: newToken})
                     console.log('exito al crear llave')

@@ -20,7 +20,10 @@ export default class SynConnectorNerdlet extends React.Component {
       selected: false,
       monitorSelected: null,
       keyVault: null,
-      valueVault: null
+      valueVault: null,
+      keyCredential: null,
+      valueCredential: null,
+      descriptionCredential: null
     }
     this.getsyntetic = this.getSyntetic();
     
@@ -49,13 +52,8 @@ export default class SynConnectorNerdlet extends React.Component {
     }
   }
 
-  // validar el script (que se ejecuta bien el script) buscar validacion en la docuemntacion
-
-  // nombres: Create, Update, Delete, Validate, ScriptsList
+  // Funciones para crear, actualizar y eliminar un monitor ==============
   
-  // crear actualizar y eliminar y listar para las credenciales
-
-  // crear, actualizar, eliminar credenciales sobre el nerd storage vault y de ahi recien se pasa a las credenciales para el script
   async Create(){
     const syntetic = {
       name: "SYNTETIC 4",
@@ -92,7 +90,9 @@ export default class SynConnectorNerdlet extends React.Component {
   ScriptsList(){
 
   }
+  // =========================================================================
 
+  // ====== Funciones para listar los monitores creados ======================
   async setMonitor(syntetic){
     const arraynew=[];
     arraynew.push(syntetic);
@@ -107,7 +107,9 @@ export default class SynConnectorNerdlet extends React.Component {
     this.setState({monitorSelected: monitor});
     console.log('monitorSelected',this.state.monitorSelected)
   }
+  // =========================================================================
 
+  // ====== Cambiar el status del monitos a ENABLED Y DISABLED ===============
   async UpdateMonitor(monitorSelected){
     if (monitorSelected.status === 'ENABLED'){
       let monitor = {
@@ -138,45 +140,55 @@ export default class SynConnectorNerdlet extends React.Component {
       this.getSyntetic();
     }
   }
+  // =========================================================================
 
-  // ================================= CREDENCIALES PARA EL SCRIPT DEL SYNTETIC =======================================
+  // ====================== CREDENCIALES PARA EL SCRIPT DEL SYNTETIC =======================================
+  setCredentialVault(credential){
+    this.setState({keyCredential: credential.key, valueCredential: credential.value});
+  }
+  
   CreateCredential(){
     const credential = {
-      key: "INGESTKEY",
-      value: "458796531",
-      description: "key for ingest grapQL querires"
+      key: this.state.keyCredential,
+      value: this.state.valueCredential,
+      description: this.state.descriptionCredential
     };
-    console.log('click en crear credential');
+    console.log('click en crear credential',credential);
     this.CredentialConnector.createCredential(credential);
   }
 
   UpdateCredential(){
     const credential = {
-      key: 'INGESTKEY',
-      value: "458796531",
-      description: "key for ingest grapQL queries after update"
+      key: this.state.keyCredential,
+      value: this.state.valueCredential,
+      description: this.state.descriptionCredential
     };
     this.CredentialConnector.updateCredential(credential);
   }
 
   DeleteCredential(){
     const credential = {
-      key: 'INGESTKEY'
+      key: this.state.keyCredential
     };
     this.CredentialConnector.deleteCredential(credential);
   }
   // ==================================== Nerd Storage Vault ==========================================================
   
+  // ========================= Lectura de los input ==========================
   updateInputKey(evt) {
-    console.log('datos ingresados', typeof(evt.target.value));
     this.setState({keyVault: evt.target.value});
   }
 
   updateInputValue(evt) {
-    console.log('datos ingresados value', typeof(evt.target.value));
     this.setState({valueVault: evt.target.value});
   }
 
+  updateInputDescription(evt) {
+    this.setState({descriptionCredential: evt.target.value});
+  }
+  // =========================================================================
+
+  // ==== Funciones para crear y listar las ¿credenciales? en el NerdStorageVault
   async CreateStorageVault() {
     const token = 'token'
     const key = this.state.keyVault;
@@ -193,9 +205,10 @@ export default class SynConnectorNerdlet extends React.Component {
     const credentialsNerdStorage = await this.NerdStorageVault.CallGetToken();
     this.setState({arrayCredentialNSVault: credentialsNerdStorage});
   }
+  // =========================================================================
 
   render() {
-    const {arrayStorageSyn, selected,  monitorSelected, arrayCredentialNSVault} = this.state;
+    const {arrayStorageSyn, selected,  monitorSelected, arrayCredentialNSVault, keyCredential, valueCredential} = this.state;
     return (
       <div>
         <h1>Hello, SynConnector Nerdlet!</h1>
@@ -338,6 +351,42 @@ export default class SynConnectorNerdlet extends React.Component {
             marginTop: '10px'
           }}
         >
+          <div style={{
+            display: 'flex',
+            marginLeft: '20px',
+            height: '30px',
+            width: '150px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            border: '2px solid rgba(0, 0, 0, 0.05)'
+          }}>
+            <input style={{height:'30px', background:'white'}} value={keyCredential} disabled/>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            marginLeft: '20px',
+            height: '30px',
+            width: '150px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            border: '2px solid rgba(0, 0, 0, 0.05)'
+          }}>
+            <input style={{height:'30px', background:'white'}} value={valueCredential} disabled/>
+          </div>
+
+          <div style={{
+            display: 'flex',
+            marginLeft: '20px',
+            height: '30px',
+            width: '150px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            border: '2px solid rgba(0, 0, 0, 0.05)'
+          }}>
+            <input style={{height:'30px', background:'white'}} onBlur={evt => this.updateInputDescription(evt)} placeholder="Descripcion(opcional)"/>
+          </div>
+
           <div
             style={{
               display: 'flex',
@@ -401,63 +450,63 @@ export default class SynConnectorNerdlet extends React.Component {
           }}
         >
           <div style={{
-              display: 'flex',
-              marginLeft: '20px',
-              height: '30px',
-              width: '150px',
-              justifyContent: 'center',
-              alignItems: 'center',
-              border: '2px solid rgba(0, 0, 0, 0.05)'
-            }}>
-              <input style={{height:'30px', background:'white'}} onBlur={evt => this.updateInputKey(evt)} onInput={toInputUppercase} placeholder="Ingrese key"/>
-            </div>
+            display: 'flex',
+            marginLeft: '20px',
+            height: '30px',
+            width: '150px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            border: '2px solid rgba(0, 0, 0, 0.05)'
+          }}>
+            <input style={{height:'30px', background:'white'}} onBlur={evt => this.updateInputKey(evt)} onInput={toInputUppercase} placeholder="Ingrese key"/>
+          </div>
 
-            <div style={{
+          <div style={{
+            display: 'flex',
+            marginLeft: '20px',
+            height: '30px',
+            width: '150px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            border: '2px solid rgba(0, 0, 0, 0.05)'
+          }}>
+            <input style={{height:'30px', background:'white'}} onBlur={evt => this.updateInputValue(evt)} placeholder="Ingrese value"/>
+          </div>
+          <div
+            style={{
               display: 'flex',
+              cursor: 'pointer',
               marginLeft: '20px',
               height: '30px',
-              width: '150px',
+              width: '100px',
               justifyContent: 'center',
               alignItems: 'center',
-              border: '2px solid rgba(0, 0, 0, 0.05)'
-            }}>
-              <input style={{height:'30px', background:'white'}} onBlur={evt => this.updateInputValue(evt)} placeholder="Ingrese value"/>
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                cursor: 'pointer',
-                marginLeft: '20px',
-                height: '30px',
-                width: '100px',
-                justifyContent: 'center',
-                alignItems: 'center',
-                border: '3px solid rgba(0, 0, 0, 0.05)'
-              }}
-              onClick={() => {
-                this.CreateStorageVault();
-              }}
-            >
-              Crear
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                cursor: 'pointer',
-                marginLeft: '20px',
-                height: '30px',
-                width: '100px',
-                justifyContent: 'center',
-                alignItems: 'center',
-                border: '3px solid rgba(0, 0, 0, 0.05)'
-              }}
-              onClick={() => {
-                this.GetStorageVault();
-              }}
-            >
-              Listar Vault
-            </div>
-            <div>
+              border: '3px solid rgba(0, 0, 0, 0.05)'
+            }}
+            onClick={() => {
+              this.CreateStorageVault();
+            }}
+          >
+            Crear
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              cursor: 'pointer',
+              marginLeft: '20px',
+              height: '30px',
+              width: '100px',
+              justifyContent: 'center',
+              alignItems: 'center',
+              border: '3px solid rgba(0, 0, 0, 0.05)'
+            }}
+            onClick={() => {
+              this.GetStorageVault();
+            }}
+          >
+            Listar Vault
+          </div>
+          <div>
             <p style= {{marginLeft: '20px'}}>Lista credenciales del NerdStorageVault</p>
             <div
               style={{
@@ -475,7 +524,7 @@ export default class SynConnectorNerdlet extends React.Component {
                   return (
                     <label
                       key={credential.key}
-                      onClick={() => this.setMonitor(syntetic)}
+                      onClick={() => this.setCredentialVault(credential)}
                     >
                       {credential.key + ' - ' + credential.value}
                     </label>
